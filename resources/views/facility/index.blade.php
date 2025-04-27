@@ -6,7 +6,7 @@
 {{--
 @section('footer')
 <script>
-    $('.delete').click(function() {
+    $('.delete').click(function () {
         var room_id = $(this).attr('room-id');
         var room_name = $(this).attr('room-name');
         var room_url = $(this).attr('room-url');
