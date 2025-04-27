@@ -15,23 +15,38 @@ use Illuminate\Support\Str;
 class AuthController extends Controller
 {
     public function login(LoginRequest $request)
-    {
-        if (Auth::attempt($request->only('email', 'password'))) {
-            activity()->causedBy(auth()->user())->log('User logged into the portal'); // Log activity message
+{
+    if (Auth::attempt($request->only('email', 'password'))) {
+        $user = auth()->user();
 
-            return redirect('dashboard')->with('success', 'Welcome '.auth()->user()->name);
+        activity()->causedBy($user)->log('User logged into the portal'); // Log activity message
+
+        // Role-based redirection
+        switch (strtolower($user->role)) {
+            case 'super':
+                return redirect()->route('dashboard.index')->with('success', 'Welcome '.$user->name);
+            case 'customer':
+                return redirect()->route('customer.index')->with('success', 'Welcome '.$user->name);
+            case 'receptionist':
+                return redirect()->route('receptionist.index')->with('success', 'Welcome '.$user->name);
+            case 'manager':
+                return redirect()->route('manager.index')->with('success', 'Welcome '.$user->name);
+            default:
+                Auth::logout();
+                return redirect()->route('login.index')->with('failed', 'Your role is not authorized to access this portal.');
         }
-
-        return redirect('login')->with('failed', 'Incorrect email / password');
     }
 
-    public function logout()
-    {
-        $name = auth()->user()->name;
-        Auth::logout();
+    return redirect()->route('login.index')->with('failed', 'Incorrect email / password');
+}
 
-        return redirect('login')->with('success', 'Logout success, goodbye '.$name);
-    }
+public function logout()
+{
+    $name = auth()->user()->name;
+    Auth::logout();
+
+    return redirect()->route('login.index')->with('success', 'Logout success, goodbye ' . $name);
+}
 
     public function forgotPassword(ForgotPasswordRequest $request)
     {
@@ -62,5 +77,20 @@ class AuthController extends Controller
         return $status === Password::PASSWORD_RESET
             ? redirect()->route('login.index')->with('status', __($status))
             : back()->withErrors(['email' => [__($status)]]);
+    }
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+    
+        User::create([
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
+    
+        return redirect()->route('login.index')->with('success', 'Registration successful! Please log in.');
     }
 }

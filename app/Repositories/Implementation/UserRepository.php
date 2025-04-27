@@ -23,7 +23,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function showUser($request)
     {
-        return User::whereIn('role', ['Super', 'Admin'])->orderBy('id', 'DESC')
+        return User::whereIn('role', ['Super', 'Admin', 'Receptionist', 'Manager'])->orderBy('id', 'DESC')
             ->when($request->qu, function ($query) use ($request) {
                 $query->where('email', 'LIKE', '%'.$request->qu.'%');
             })

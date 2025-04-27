@@ -44,8 +44,12 @@
                             <label for="role" class="form-label">Role</label>
                             <select id="role" name="role" class="form-select @error('password') is-invalid @enderror">
                                 <option selected disabled hidden>Choose...</option>
-                                <option value="Super" @if (old('role') == 'Super') selected @endif>Super</option>
+                                
                                 <option value="Admin" @if (old('role') == 'Admin') selected @endif>Admin</option>
+                                <option value="Manager" @if (old('role') == 'Manager') selected @endif>Manager</option>
+                                <option value="Receptionist" @if (old('role') == 'Receptionist') selected @endif>Receptionist</option>
+                                <option value="Super" @if (old('role') == 'Super') selected @endif>Super</option>
+                                
                             </select>
                             @error('role')
                                 <div class="text-danger mt-1">

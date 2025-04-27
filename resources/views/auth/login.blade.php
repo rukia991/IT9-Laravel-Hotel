@@ -85,6 +85,7 @@
                             </div>
                             <hr class="my-4">
                             <p class="text-center">Forgot Password? <a href="/forgot-password">go here</a></p>
+                            <p class="text-center">Dont have an account?? <a href="/register">Sign Up</a></p>
                         </form>
                     </div>
                 </div>

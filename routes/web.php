@@ -29,10 +29,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// Routes for Super Admin
 Route::group(['middleware' => ['auth', 'checkRole:Super']], function () {
     Route::resource('user', UserController::class);
 });
 
+// Routes for Super Admin and Admin
 Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
     Route::post('/room/{room}/image/upload', [ImageController::class, 'store'])->name('image.store');
     Route::delete('/image/{image}', [ImageController::class, 'destroy'])->name('image.destroy');
@@ -64,6 +66,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
     Route::get('/get-dialy-guest/{year}/{month}/{day}', [ChartController::class, 'dailyGuest'])->name('chart.dailyGuest');
 });
 
+// Routes for Super Admin, Admin, and Customer
 Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], function () {
     Route::get('/activity-log', [ActivityController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/all', [ActivityController::class, 'all'])->name('activity-log.all');
@@ -85,6 +88,8 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
 // Login routes
 Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::view('/receptionist', 'receptionist.index')->name('receptionist.index');
+Route::view('/manager', 'manager.index')->name('manager.index');
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {
@@ -97,4 +102,16 @@ Route::group(['middleware' => 'guest'], function () {
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
+// Register routes
+Route::group(['middleware' => 'guest'], function () {
+    Route::view('/register', 'auth.register')->name('register.index');
+    Route::post('/register', [AuthController::class, 'register'])->name('register');
+});
+
+// Logout route
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Receptionist,Manager']], function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Home route
 Route::get('/', [HomeController::class, 'index'])->name('home');
