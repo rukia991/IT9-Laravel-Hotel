@@ -90,14 +90,15 @@ Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::view('/receptionist', 'receptionist.index')->name('receptionist.index');
 Route::view('/manager', 'manager.index')->name('manager.index');
+Route::view('/customer', 'customer.index')->name('customer.index');
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {
-    Route::get('/forgot-password', fn () => view('auth.passwords.email'))->name('password.request');
+    Route::get('/forgot-password', fn() => view('auth.passwords.email'))->name('password.request');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('password.email');
 
     // Reset Password routes
-    Route::get('/reset-password/{token}', fn (string $token) => view('auth.reset-password', ['token' => $token]))
+    Route::get('/reset-password/{token}', fn(string $token) => view('auth.reset-password', ['token' => $token]))
         ->name('password.reset');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
@@ -109,7 +110,7 @@ Route::group(['middleware' => 'guest'], function () {
 });
 
 // Logout route
-Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Receptionist,Manager']], function () {
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Receptionist,Manager,Customer']], function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
