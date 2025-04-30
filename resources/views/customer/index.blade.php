@@ -22,7 +22,6 @@
             margin-right: -10px;
             color: #212529
         }
-
     </style>
 
     <div class="row">
@@ -39,8 +38,8 @@
                 </div>
                 <div class="col-lg-6 mb-2">
                     <form class="d-flex" method="GET" action="{{ route('customer.index') }}">
-                        <input class="form-control me-2" type="search" placeholder="Search by name" aria-label="Search" id="search"
-                            name="search" value="{{ request()->input('search') }}">
+                        <input class="form-control me-2" type="search" placeholder="Search by name" aria-label="Search"
+                            id="search" name="search" value="{{ request()->input('search') }}">
                         <button class="btn btn-outline-dark" type="submit">Search</button>
                     </form>
                 </div>
@@ -159,35 +158,35 @@
 @endsection
 
 @section('footer')
-<script>
-    $('.delete').click(function() {
-        var customer_id = $(this).attr('customer-id');
-        var customer_name = $(this).attr('customer-name');
-        var customer_url = $(this).attr('customer-url');
-        const swalWithBootstrapButtons = Swal.mixin({
-            customClass: {
-                confirmButton: 'btn btn-success',
-                cancelButton: 'btn btn-danger'
-            },
-            buttonsStyling: false
-        })
+    <script>
+        $('.delete').click(function () {
+            var customer_id = $(this).attr('customer-id');
+            var customer_name = $(this).attr('customer-name');
+            var customer_url = $(this).attr('customer-url');
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                    confirmButton: 'btn btn-success',
+                    cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+            })
 
-        swalWithBootstrapButtons.fire({
-            title: 'Are you sure?',
-            text: customer_name + " will be deleted, You won't be able to revert this!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, delete it!',
-            cancelButtonText: 'No, cancel! ',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                id = "#delete-customer-form-" + customer_id
-                console.log(id)
-                $(id).submit();
-            }
-        })
-    });
+            swalWithBootstrapButtons.fire({
+                title: 'Are you sure?',
+                text: customer_name + " will be deleted, You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel! ',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    id = "#delete-customer-form-" + customer_id
+                    console.log(id)
+                    $(id).submit();
+                }
+            })
+        });
 
-</script>
+    </script>
 @endsection

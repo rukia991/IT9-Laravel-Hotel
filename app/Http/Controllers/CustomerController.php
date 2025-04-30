@@ -18,9 +18,9 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
-        $customers = $this->customerRepository->get($request);
+        $customer = $this->customerRepository->get($request);
 
-        return view('customer.index', ['customers' => $customers]);
+        return view('customer.index', ['customers' => $customer]);
     }
 
     public function create()
@@ -32,7 +32,7 @@ class CustomerController extends Controller
     {
         $customer = $this->customerRepository->store($request);
 
-        return redirect('customer')->with('success', 'Customer '.$customer->name.' created');
+        return redirect('customer')->with('success', 'Customer ' . $customer->name . ' created');
     }
 
     public function show(Customer $customer)
@@ -49,14 +49,14 @@ class CustomerController extends Controller
     {
         $customer->update($request->all());
 
-        return redirect('customer')->with('success', 'customer '.$customer->name.' udpated!');
+        return redirect('customer')->with('success', 'customer ' . $customer->name . ' udpated!');
     }
 
     public function destroy(Customer $customer, ImageRepositoryInterface $imageRepository)
     {
         try {
             $user = User::find($customer->user->id);
-            $avatar_path = public_path('img/user/'.$user->name.'-'.$user->id);
+            $avatar_path = public_path('img/user/' . $user->name . '-' . $user->id);
 
             $customer->delete();
             $user->delete();
@@ -65,14 +65,14 @@ class CustomerController extends Controller
                 $imageRepository->destroy($avatar_path);
             }
 
-            return redirect('customer')->with('success', 'Customer '.$customer->name.' deleted!');
+            return redirect('customer')->with('success', 'Customer ' . $customer->name . ' deleted!');
         } catch (\Exception $e) {
             $errorMessage = '';
             if ($e->errorInfo[0] == '23000') {
                 $errorMessage = 'Data still connected to other tables';
             }
 
-            return redirect('customer')->with('failed', 'Customer '.$customer->name.' cannot be deleted! '.$errorMessage);
+            return redirect('customer')->with('failed', 'Customer ' . $customer->name . ' cannot be deleted! ' . $errorMessage);
         }
     }
 }

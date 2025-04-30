@@ -92,6 +92,8 @@ Route::view('/receptionist', 'receptionist.index')->name('receptionist.index');
 Route::view('/manager', 'manager.index')->name('manager.index');
 Route::view('/customer', 'customer.index')->name('customer.index');
 
+Route::resource('customer', CustomerController::class);
+
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {
     Route::get('/forgot-password', fn() => view('auth.passwords.email'))->name('password.request');
