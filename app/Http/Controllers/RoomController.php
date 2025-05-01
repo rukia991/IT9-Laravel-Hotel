@@ -14,109 +14,109 @@ use App\Repositories\Interface\TypeRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
+
 class RoomController extends Controller
 {
     public function __construct(
         private RoomRepositoryInterface $roomRepository,
         private TypeRepositoryInterface $typeRepository,
-        private RoomStatusRepositoryInterface $roomStatusRepositoryInterface
+        private RoomStatusRepositoryInterface $roomStatusRepository
     ) {
     }
 
-    public function index(Request $request)
+    /**
+     * Display a listing of the rooms.
+     */
+    public function index()
     {
-        if ($request->ajax()) {
-            return $this->roomRepository->getRoomsDatatable($request);
-        }
-
-        $types = $this->typeRepository->getTypeList($request);
-        $roomStatuses = $this->roomStatusRepositoryInterface->getRoomStatusList($request);
-
-        return view('room.index', [
-            'types' => $types,
-            'roomStatuses' => $roomStatuses,
-        ]);
+        // Fetch rooms with pagination via repository
+        $rooms = $this->roomRepository->paginateRooms(6); // Correct variable: $rooms
+    
+        // Pass the rooms to the view
+        return view('customer.index', compact('rooms'));
     }
-
+    
+    
+    /**
+     * Show the form for creating a new room.
+     */
     public function create()
     {
         $types = Type::all();
-        $roomstatuses = RoomStatus::all();
-        $view = view('room.create', [
-            'types' => $types,
-            'roomstatuses' => $roomstatuses,
-        ])->render();
+        $roomStatuses = RoomStatus::all();
 
-        return response()->json([
-            'view' => $view,
-        ]);
+        $view = view('room.create', compact('types', 'roomStatuses'))->render();
+
+        return response()->json(['view' => $view]);
     }
 
+    /**
+     * Store a newly created room in storage.
+     */
     public function store(StoreRoomRequest $request)
     {
-        $room = Room::create($request->all());
+        $room = Room::create($request->validated());
 
-        return response()->json([
-            'message' => 'Room '.$room->number.' created',
-        ]);
+        return response()->json(['message' => 'Room ' . $room->number . ' created']);
     }
 
+    /**
+     * Display the specified room.
+     */
     public function show(Room $room)
     {
-        $customer = [];
-        $transaction = Transaction::where([['check_in', '<=', Carbon::now()], ['check_out', '>=', Carbon::now()], ['room_id', $room->id]])->first();
-        if (! empty($transaction)) {
-            $customer = $transaction->customer;
-        }
+        $transaction = Transaction::where([
+            ['check_in', '<=', Carbon::now()],
+            ['check_out', '>=', Carbon::now()],
+            ['room_id', $room->id]
+        ])->first();
 
-        return view('room.show', [
-            'customer' => $customer,
-            'room' => $room,
-        ]);
+        $customer = $transaction?->customer ?? [];
+
+        return view('room.show', compact('customer', 'room'));
     }
 
+    /**
+     * Show the form for editing the specified room.
+     */
     public function edit(Room $room)
     {
         $types = Type::all();
-        $roomstatuses = RoomStatus::all();
-        $view = view('room.edit', [
-            'room' => $room,
-            'types' => $types,
-            'roomstatuses' => $roomstatuses,
-        ])->render();
+        $roomStatuses = RoomStatus::all();
 
-        return response()->json([
-            'view' => $view,
-        ]);
+        $view = view('room.edit', compact('room', 'types', 'roomStatuses'))->render();
+
+        return response()->json(['view' => $view]);
     }
 
+    /**
+     * Update the specified room in storage.
+     */
     public function update(Room $room, StoreRoomRequest $request)
     {
-        $room->update($request->all());
+        $room->update($request->validated());
 
-        return response()->json([
-            'message' => 'Room '.$room->number.' udpated!',
-        ]);
+        return response()->json(['message' => 'Room ' . $room->number . ' updated!']);
     }
 
+    /**
+     * Remove the specified room from storage.
+     */
     public function destroy(Room $room, ImageRepositoryInterface $imageRepository)
     {
         try {
             $room->delete();
 
-            $path = 'img/room/'.$room->number;
-            $path = public_path($path);
+            $path = public_path('img/room/' . $room->number);
 
             if (is_dir($path)) {
                 $imageRepository->destroy($path);
             }
 
-            return response()->json([
-                'message' => 'Room number '.$room->number.' deleted!',
-            ]);
+            return response()->json(['message' => 'Room number ' . $room->number . ' deleted!']);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Customer '.$room->number.' cannot be deleted! Error Code:'.$e->errorInfo[1],
+                'message' => 'Room ' . $room->number . ' cannot be deleted! Error Code: ' . $e->getCode(),
             ], 500);
         }
     }

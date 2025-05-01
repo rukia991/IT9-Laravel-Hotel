@@ -70,9 +70,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
 Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], function () {
     Route::get('/activity-log', [ActivityController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/all', [ActivityController::class, 'all'])->name('activity-log.all');
-    Route::resource('user', UserController::class)->only([
-        'show',
-    ]);
+    Route::resource('user', UserController::class)->only(['show']);
 
     Route::view('/notification', 'notification.index')->name('notification.index');
 
@@ -88,11 +86,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
 // Login routes
 Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-Route::view('/receptionist', 'receptionist.index')->name('receptionist.index');
-Route::view('/manager', 'manager.index')->name('manager.index');
-Route::view('/customer', 'customer.index')->name('customer.index');
 
-Route::resource('customer', CustomerController::class);
+// For Customers
+Route::get('/customer', [RoomController::class, 'index'])->name('customer.index'); // Removed conflicting Route::view
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {

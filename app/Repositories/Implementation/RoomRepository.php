@@ -103,4 +103,9 @@ class RoomRepository implements RoomRepositoryInterface
 
         return json_encode($response);
     }
+    public function paginateRooms(int $perPage = 6)
+{
+    return Room::paginate($perPage);
+}
+
 }

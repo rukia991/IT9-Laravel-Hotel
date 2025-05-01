@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class Room extends Model
 {
     use HasFactory;
@@ -16,8 +17,12 @@ class Room extends Model
         'capacity',
         'price',
         'view',
+        'image',
+        'description',
+        'is_recommended', // for recommended rooms
     ];
 
+    // Define relationships if needed
     public function type()
     {
         return $this->belongsTo(Type::class);
@@ -26,19 +31,5 @@ class Room extends Model
     public function roomStatus()
     {
         return $this->belongsTo(RoomStatus::class);
-    }
-
-    public function image()
-    {
-        return $this->hasMany(Image::class);
-    }
-
-    public function firstImage()
-    {
-        if (count($this->image) > 0) {
-            return $this->image->first()->getRoomImage();
-        }
-
-        return asset('img/default/default-room.png');
     }
 }
