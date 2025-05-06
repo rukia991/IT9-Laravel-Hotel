@@ -18,10 +18,9 @@ class AuthController extends Controller
     {
         if (Auth::attempt($request->only('email', 'password'))) {
             $user = auth()->user();
-
-            activity()->causedBy($user)->log('User logged into the portal'); // Log activity message
-
-            // Role-based redirection
+    
+            activity()->causedBy($user)->log('User logged into the portal');
+    
             switch (strtolower($user->role)) {
                 case 'super':
                     return redirect()->route('dashboard.index')->with('success', 'Welcome ' . $user->name);
@@ -36,8 +35,9 @@ class AuthController extends Controller
                     return redirect()->route('login.index')->with('failed', 'Your role is not authorized to access this portal.');
             }
         }
-
-        return redirect()->route('login.index')->with('failed', 'Incorrect email / password');
+    
+        // If login fails
+        return back()->with('failed', 'Invalid credentials.');
     }
 
     public function logout()

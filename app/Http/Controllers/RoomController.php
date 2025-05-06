@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreRoomRequest;
 use App\Models\Room;
 use App\Models\RoomStatus;
+use App\Models\RoomType;
 use App\Models\Transaction;
 use App\Models\Type;
 use App\Repositories\Interface\ImageRepositoryInterface;
@@ -29,13 +30,18 @@ class RoomController extends Controller
      */
     public function index()
     {
-        // Fetch rooms with pagination via repository
-        $rooms = $this->roomRepository->paginateRooms(6); // Correct variable: $rooms
+        $rooms = $this->roomRepository->paginateRooms(10);
+        $roomStatuses = RoomStatus::all(); 
+        $types = Type::all();
     
-        // Pass the rooms to the view
+        $role = auth()->user()->role;
+    
+        if (strtolower($role) === 'super' || strtolower($role) === 'admin') {
+            return view('room.index', compact('rooms', 'roomStatuses', 'types'));
+        }
+    
         return view('customer.index', compact('rooms'));
     }
-    
     
     /**
      * Show the form for creating a new room.

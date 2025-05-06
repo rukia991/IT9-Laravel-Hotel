@@ -15,10 +15,12 @@ class CreatePaymentsTable extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
-            $table->foreignId('transaction_id')->constrained();
-            $table->decimal('price', 65, 2);
+            $table->unsignedBigInteger('reservation_id');
+            $table->decimal('amount', 10, 2);
+            $table->enum('payment_method', ['Cash', 'Card', 'Online']);
+            $table->enum('status', ['Pending', 'Paid']);
             $table->timestamps();
+            $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
         });
     }
 

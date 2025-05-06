@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Route;
 // Routes for Super Admin
 Route::group(['middleware' => ['auth', 'checkRole:Super']], function () {
     Route::resource('user', UserController::class);
+    Route::get('/rooms', [RoomController::class, 'show'])->name('room.show');
 });
 
 // Routes for Super Admin and Admin
@@ -51,7 +52,10 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
 
     Route::resource('customer', CustomerController::class);
     Route::resource('type', TypeController::class);
+
     Route::resource('room', RoomController::class);
+    Route::get('/room/{room}', [RoomController::class, 'show'])->name('room.show');
+
     Route::resource('roomstatus', RoomStatusController::class);
     Route::resource('transaction', TransactionController::class);
     Route::resource('facility', FacilityController::class);
@@ -83,12 +87,26 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
     Route::get('/notification-to/{id}', [NotificationsController::class, 'routeTo'])->name('notification.routeTo');
 });
 
+// Routes for Receptionist
+Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
+    Route::get('/receptionist', function () {
+        return view('receptionist.index'); // Correct path to the receptionist view
+    })->name('receptionist.index');
+});
+
+// Routes for Manager
+Route::group(['middleware' => ['auth', 'checkRole:Manager']], function () {
+    Route::get('/manager', function () {
+        return view('manager.index'); // Correct path to the manager view
+    })->name('manager.index');
+});
+
 // Login routes
 Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
 // For Customers
-Route::get('/customer', [RoomController::class, 'index'])->name('customer.index'); // Removed conflicting Route::view
+Route::get('/customer', [RoomController::class, 'index'])->name('customer.index');
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {

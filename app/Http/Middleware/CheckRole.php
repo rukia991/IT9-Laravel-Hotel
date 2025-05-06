@@ -12,12 +12,17 @@ class CheckRole
      *
      * @return mixed
      */
-    public function handle(Request $request, Closure $next, ...$roles)
+    public function handle($request, Closure $next, ...$roles)
     {
-        if (in_array($request->user()->role, $roles)) {
-            return $next($request);
+        if (!auth()->check()) {
+            return redirect()->route('login.index');
         }
-
-        return redirect()->back()->with('failed', 'You are not authorized');
+    
+        if (!in_array(auth()->user()->role, $roles)) {
+            abort(403); // Unauthorized
+        }
+    
+        return $next($request);
     }
+    
 }

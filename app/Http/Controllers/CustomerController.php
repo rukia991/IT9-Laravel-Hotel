@@ -11,18 +11,12 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function __construct(
-        private CustomerRepositoryInterface $customerRepository
-    ) {
-    }
-
-    public function index(Request $request)
+    public function index()
     {
-        $customer = $this->customerRepository->get($request);
-
-        return view('customer.index', ['customers' => $customer]);
+        $rooms = Room::where('status', 'available')->get();
+        return view('room.index', compact('rooms'));
     }
-
+    
     public function create()
     {
         return view('customer.create');
