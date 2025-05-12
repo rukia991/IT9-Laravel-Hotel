@@ -154,7 +154,8 @@
                         <h5 class="card-title">{{ $room->name }}</h5>
                         <p class="card-text flex-grow-1">{{ $room->description }}</p>
                         <div class="price mb-2 fw-bold">₱{{ number_format($room->price, 2) }}</div>
-                        <a href="{{ route('customer.show', $room->id) }}" class="btn btn-primary mt-auto">View Room</a>
+<a href="#" class="btn btn-primary mt-auto view-room-btn" data-id="{{ $room->id }}">View Room</a>
+
                     </div>
                 </div>
             </div>
@@ -202,4 +203,57 @@
     </div>
 </div>
 </div>
+
+<!-- Room Detail Modal -->
+<div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="roomModalLabel">Room Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Room content will be loaded here -->
+        <div id="roomModalContent" class="p-3 text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = new bootstrap.Modal(document.getElementById('roomModal'));
+    const modalContent = document.getElementById('roomModalContent');
+
+    document.querySelectorAll('.view-room-btn').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            const roomId = this.getAttribute('data-id');
+            modalContent.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>`;
+            modal.show();
+
+            fetch(`/customer/${roomId}`)
+                .then(response => response.text())
+                .then(html => {
+                    modalContent.innerHTML = html;
+                })
+                .catch(err => {
+                    modalContent.innerHTML = `<div class="alert alert-danger">Error loading room details.</div>`;
+                });
+        });
+    });
+});
+</script>
+@endpush
+
 @endsection
