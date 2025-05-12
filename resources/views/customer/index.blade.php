@@ -154,7 +154,7 @@
                         <h5 class="card-title">{{ $room->name }}</h5>
                         <p class="card-text flex-grow-1">{{ $room->description }}</p>
                         <div class="price mb-2 fw-bold">₱{{ number_format($room->price, 2) }}</div>
-                        <a href="{{ route('room.show', $room->id) }}" class="btn btn-primary mt-auto">View Room</a>
+                        <a href="{{ route('customer.show', $room->id) }}" class="btn btn-primary mt-auto">View Room</a>
                     </div>
                 </div>
             </div>

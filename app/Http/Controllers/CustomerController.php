@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Repositories\Interface\CustomerRepositoryInterface;
 use App\Repositories\Interface\ImageRepositoryInterface;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
+use App\Models\Transaction;
 
 class CustomerController extends Controller
 {
@@ -29,10 +31,14 @@ class CustomerController extends Controller
         return redirect('customer')->with('success', 'Customer ' . $customer->name . ' created');
     }
 
-    public function show(Customer $customer)
-    {
-        return view('customer.show', ['customer' => $customer]);
-    }
+
+public function show($id)
+{
+    $room = Room::findOrFail($id);
+
+    // Ensure no additional role checks are being done here
+    return view('customer.show', compact('room'));
+}
 
     public function edit(Customer $customer)
     {

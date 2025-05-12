@@ -71,13 +71,14 @@ class RoomController extends Controller
      */
     public function show(Room $room)
     {
-        $transaction = Transaction::where([
-            ['check_in', '<=', Carbon::now()],
-            ['check_out', '>=', Carbon::now()],
-            ['room_id', $room->id]
-        ])->first();
+$transaction = Transaction::where([
+    ['check_in', '<=', Carbon::now()],
+    ['check_out', '>=', Carbon::now()],
+    ['room_id', $room->id]
+])->first();
 
-        $customer = $transaction?->customer ?? [];
+$customer = $transaction?->customer ?? [];
+
 
         return view('room.show', compact('customer', 'room'));
     }

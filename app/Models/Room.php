@@ -39,4 +39,9 @@ class Room extends Model
     return $this->hasMany(Image::class);
 }
 
+public function show(User $user, Room $room)
+{
+    return $user->id === $room->user_id;
+}
+
 }
