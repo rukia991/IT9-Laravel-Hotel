@@ -80,11 +80,21 @@ $(function() {
     <hr>
     <h5>Navigation</h5>
     <nav class="nav flex-column">
-        <a class="nav-link active" href="#">Home</a>
-        <a class="nav-link" href="#">All Rooms</a>
-        <a class="nav-link" href="#">Special Offers</a>
-        <a class="nav-link" href="#">Facilities</a>
-        <a class="nav-link" href="#">Contact Us</a>
+        <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
+            <i class="fas fa-home me-2"></i>Home
+        </a>
+        <a class="nav-link {{ request()->routeIs('customer.reservations') ? 'active' : '' }}" href="{{ route('customer.reservations') }}">
+            <i class="fas fa-calendar-alt me-2"></i>My Reservations
+        </a>
+        <a class="nav-link" href="#">
+            <i class="fas fa-tag me-2"></i>Special Offers
+        </a>
+        <a class="nav-link" href="#">
+            <i class="fas fa-building me-2"></i>Facilities
+        </a>
+        <a class="nav-link" href="#">
+            <i class="fas fa-envelope me-2"></i>Contact Us
+        </a>
     </nav>
     <hr>
     <div class="alert alert-info mt-3 mb-0 p-2 text-center">

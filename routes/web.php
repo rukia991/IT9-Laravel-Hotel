@@ -16,6 +16,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\TransactionRoomReservationController;
 use App\Http\Controllers\TypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\BookingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Route;
 // Routes for Super Admin
 Route::group(['middleware' => ['auth', 'checkRole:Super']], function () {
     Route::resource('user', UserController::class);
-    Route::get('/rooms', [RoomController::class, 'show'])->name('room.show');
+    Route::get('/rooms', [RoomController::class, 'show'])->name('admin.rooms.show');
 });
 
 // Routes for Super Admin and Admin
@@ -54,7 +55,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
     Route::resource('type', TypeController::class);
 
     Route::resource('room', RoomController::class);
-    Route::get('/room/{room}', [RoomController::class, 'show'])->name('room.show');
+    Route::get('/room/{room}', [RoomController::class, 'show'])->name('room.details');
 
     Route::resource('roomstatus', RoomStatusController::class);
     Route::resource('transaction', TransactionController::class);
@@ -75,6 +76,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
     Route::get('/activity-log', [ActivityController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/all', [ActivityController::class, 'all'])->name('activity-log.all');
     Route::resource('user', UserController::class)->only(['show']);
+    Route::get('/customer/reservations', [CustomerController::class, 'reservedRooms'])->name('customer.reservations');
 
     Route::view('/notification', 'notification.index')->name('notification.index');
 
@@ -85,13 +87,42 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
     Route::get('/mark-all-as-read', [NotificationsController::class, 'markAllAsRead'])->name('notification.markAllAsRead');
 
     Route::get('/notification-to/{id}', [NotificationsController::class, 'routeTo'])->name('notification.routeTo');
+
+    Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 });
 
 // Routes for Receptionist
 Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
+    // Dashboard
     Route::get('/receptionist', function () {
-        return view('receptionist.index'); // Correct path to the receptionist view
+        return view('receptionist.index');
     })->name('receptionist.index');
+
+    // Reservations
+    Route::get('/receptionist/reservations', [TransactionController::class, 'receptionistReservations'])
+        ->name('receptionist.reservations');
+    Route::get('/receptionist/reservations/{transaction}/approve', [TransactionController::class, 'approveReservation'])
+        ->name('receptionist.reservations.approve');
+    Route::get('/receptionist/reservations/{transaction}/reject', [TransactionController::class, 'rejectReservation'])
+        ->name('receptionist.reservations.reject');
+    Route::get('/receptionist/reservations/{transaction}', [TransactionController::class, 'reservationDetails'])
+        ->name('receptionist.reservation-details');
+
+    // Rooms
+    Route::get('/receptionist/rooms', [RoomController::class, 'receptionistRooms'])
+        ->name('receptionist.rooms');
+    Route::get('/receptionist/new-reservation', [TransactionRoomReservationController::class, 'createReservation'])
+        ->name('receptionist.new-reservation');
+
+    // Payments
+    Route::get('/receptionist/payments', [PaymentController::class, 'receptionistPayments'])
+        ->name('receptionist.payments');
+    Route::get('/receptionist/process-payment/{transaction}', [PaymentController::class, 'processPayment'])
+        ->name('receptionist.process-payment');
+
+    // Check-in/out
+    Route::get('/receptionist/check-in', [TransactionController::class, 'checkInList'])
+        ->name('receptionist.check-in');
 });
 
 // Routes for Manager
@@ -105,8 +136,9 @@ Route::group(['middleware' => ['auth', 'checkRole:Manager']], function () {
 Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 
-// For Customers
+// For Customers and Guest Access
 Route::get('/customer', [RoomController::class, 'index'])->name('customer.index');
+Route::get('/customer/room/{room}', [RoomController::class, 'show'])->name('customer.room.show');
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {
@@ -123,11 +155,6 @@ Route::group(['middleware' => 'guest'], function () {
 Route::group(['middleware' => 'guest'], function () {
     Route::view('/register', 'auth.register')->name('register.index');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
-});
-
-// Logout route
-Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Receptionist,Manager,Customer']], function () {
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
 
 // Home route

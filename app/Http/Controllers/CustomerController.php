@@ -8,9 +8,16 @@ use App\Models\User;
 use App\Repositories\Interface\CustomerRepositoryInterface;
 use App\Repositories\Interface\ImageRepositoryInterface;
 use Illuminate\Http\Request;
+use App\Models\Room;
+use App\Models\Transaction;
 
 class CustomerController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->only(['reservedRooms']);
+    }
+
     public function index()
     {
         $rooms = Room::where('status', 'available')->get();
@@ -68,5 +75,16 @@ class CustomerController extends Controller
 
             return redirect('customer')->with('failed', 'Customer ' . $customer->name . ' cannot be deleted! ' . $errorMessage);
         }
+    }
+
+    public function reservedRooms()
+    {
+        $user = auth()->user();
+        $transactions = Transaction::with('room')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(9);
+
+        return view('customer.reserved_rooms', compact('transactions'));
     }
 }

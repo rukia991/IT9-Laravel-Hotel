@@ -18,7 +18,10 @@ class CheckRole
             return redirect()->route('login.index');
         }
     
-        if (!in_array(auth()->user()->role, $roles)) {
+        $userRole = strtolower(auth()->user()->role);
+        $allowedRoles = array_map('strtolower', $roles);
+    
+        if (!in_array($userRole, $allowedRoles)) {
             abort(403); // Unauthorized
         }
     

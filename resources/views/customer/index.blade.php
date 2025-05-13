@@ -87,19 +87,18 @@
     .swiper-button-next,
     .swiper-button-prev {
         display: none !important;
+    }
 
-        .pagination .page-link {
-    color: #007bff;
-    border: 1px solid #dee2e6;
-    margin: 0 2px;
-}
+    .pagination .page-link {
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        margin: 0 2px;
+    }
 
-.pagination .page-item.active .page-link {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
-}
-
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
     }
 </style>
 
@@ -139,67 +138,54 @@
                 </button>
             </div>
 
-<!-- Rooms Section -->
-<div class="container mt-4 mb-4">
-    <div class="row">
-        @foreach($rooms as $room)
-            <div class="col-md-4 mb-4 d-flex align-items-stretch">
-                <div class="card shadow-sm w-100">
-                    <img src="{{ $room->image }}"
-                         onerror="this.onerror=null; this.src='https://placehold.co/300x200?text=No+Image';"
-                         class="card-img-top"
-                         alt="Room Image"
-                         style="height: 200px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ $room->name }}</h5>
-                        <p class="card-text flex-grow-1">{{ $room->description }}</p>
-                        <div class="price mb-2 fw-bold">₱{{ number_format($room->price, 2) }}</div>
-                        <a href="{{ route('room.show', $room->id) }}" class="btn btn-primary mt-auto">View Room</a>
-                    </div>
+            <!-- Rooms Section -->
+            <div class="container mt-4 mb-4">
+                <div class="row">
+                    @foreach($rooms as $room)
+                        <div class="col-md-4 mb-4 d-flex align-items-stretch">
+                            <div class="card shadow-sm w-100">
+                                @if($room->images->first())
+                                    <img src="{{ asset('storage/images/' . $room->images->first()->path) }}"
+                                         onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Room+{{ $room->number }}';"
+                                         class="card-img-top"
+                                         alt="{{ $room->name }}"
+                                         style="height: 200px; object-fit: cover;">
+                                @else
+                                    <img src="https://placehold.co/600x400?text=Room+{{ $room->number }}"
+                                         class="card-img-top"
+                                         alt="Default Room Image"
+                                         style="height: 200px; object-fit: cover;">
+                                @endif
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ $room->number }} - {{ $room->type->name }}</h5>
+                                    <p class="card-text flex-grow-1">{{ $room->view }}</p>
+                                    <div class="price mb-2 fw-bold">₱{{ number_format($room->price, 2) }} / night</div>
+                                    <a href="{{ route('customer.room.show', $room->id) }}" class="btn btn-primary mt-auto">View Room</a>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
+
+                <!-- Pagination -->
+                @if ($rooms->hasPages())
+                    <nav class="mt-4 d-flex justify-content-center">
+                        {{ $rooms->links() }}
+                    </nav>
+                @endif
             </div>
-        @endforeach
+
+            <!-- Footer -->
+            <footer class="bg-dark text-white text-center py-3 mt-5">
+                <p>&copy; {{ date('Y') }} Our Hotel. All rights reserved.</p>
+                <p>
+                    Follow us on
+                    <a href="#" class="text-white text-decoration-none">Facebook</a>,
+                    <a href="#" class="text-white text-decoration-none">Twitter</a>,
+                    <a href="#" class="text-white text-decoration-none">Instagram</a>
+                </p>
+            </footer>
+        </div>
     </div>
-
-    <!-- Pagination -->
-    @if ($rooms->hasPages())
-        <nav class="mt-4 d-flex justify-content-center">
-            <ul class="pagination">
-                @if ($rooms->onFirstPage())
-                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                @else
-                    <li class="page-item"><a class="page-link" href="{{ $rooms->previousPageUrl() }}" rel="prev">&laquo;</a></li>
-                @endif
-
-                @foreach ($rooms->links()->elements[0] as $page => $url)
-                    @if ($page == $rooms->currentPage())
-                        <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
-                    @else
-                        <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
-                    @endif
-                @endforeach
-
-                @if ($rooms->hasMorePages())
-                    <li class="page-item"><a class="page-link" href="{{ $rooms->nextPageUrl() }}" rel="next">&raquo;</a></li>
-                @else
-                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                @endif
-            </ul>
-        </nav>
-    @endif
-</div>
-
-        <!-- Footer -->
-        <footer class="bg-dark text-white text-center py-3 mt-5">
-            <p>&copy; {{ date('Y') }} Our Hotel. All rights reserved.</p>
-            <p>
-                Follow us on
-                <a href="#" class="text-white text-decoration-none">Facebook</a>,
-                <a href="#" class="text-white text-decoration-none">Twitter</a>,
-                <a href="#" class="text-white text-decoration-none">Instagram</a>
-            </p>
-        </footer>
-    </div>
-</div>
 </div>
 @endsection

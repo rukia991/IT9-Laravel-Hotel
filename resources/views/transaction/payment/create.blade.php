@@ -73,7 +73,9 @@
                                         <label for="payment" class="col-sm-2 col-form-label">Pay</label>
                                         <div class="col-sm-10">
                                             <input type="text" class="form-control @error('payment') is-invalid @enderror"
-                                                placeholder="Input payment" value="" id="payment" name="payment">
+                                                placeholder="Input payment" value="" id="payment" name="payment"
+                                                data-decimal="," data-thousand="."
+                                                onkeyup="formatNumber(this)">
                                         </div>
                                     </div>
                                     <div class="row mb-3">
@@ -85,6 +87,7 @@
                                             {{ $message }}
                                         </div>
                                     @enderror
+                                    <div class="form-text">Enter amount in Indonesian format (e.g., 4.623,92)</div>
                                     <button class="btn btn-success float-end">Pay</button>
                                 </form>
                             </div>
@@ -153,5 +156,50 @@
             .toString());
     });
 
+    function formatNumber(input) {
+        // Remove any character that's not a number, comma, or period
+        let value = input.value.replace(/[^\d.,]/g, '');
+        
+        // Convert Indonesian format to standard number for validation
+        let numericValue = value.replace(/\./g, '').replace(',', '.');
+        
+        // Store the actual numeric value in a hidden input
+        if (!document.getElementById('payment_numeric')) {
+            let hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.id = 'payment_numeric';
+            hiddenInput.name = 'payment_numeric';
+            input.parentNode.appendChild(hiddenInput);
+        }
+        document.getElementById('payment_numeric').value = numericValue;
+        
+        // Format the display value
+        if (value) {
+            // Split number at decimal point
+            let parts = value.split(',');
+            let wholePart = parts[0];
+            let decimalPart = parts.length > 1 ? ',' + parts[1] : '';
+            
+            // Add thousand separators to whole part
+            wholePart = wholePart.replace(/\./g, '');
+            wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            
+            // Combine whole and decimal parts
+            input.value = wholePart + decimalPart;
+        }
+    }
+
+    // Modify form submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        let paymentInput = document.getElementById('payment');
+        let numericValue = document.getElementById('payment_numeric').value;
+        
+        // Update the original input with the numeric value
+        paymentInput.value = numericValue;
+        
+        // Submit the form
+        this.submit();
+    });
 </script>
 @endsection

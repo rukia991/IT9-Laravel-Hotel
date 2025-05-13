@@ -18,6 +18,13 @@ class Transaction extends Model
         'check_in',
         'check_out',
         'status',
+        'number_of_guests',
+        'special_requests'
+    ];
+
+    protected $casts = [
+        'check_in' => 'datetime',
+        'check_out' => 'datetime'
     ];
 
     public function user()

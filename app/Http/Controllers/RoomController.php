@@ -78,8 +78,14 @@ class RoomController extends Controller
         ])->first();
 
         $customer = $transaction?->customer ?? [];
-
-        return view('room.show', compact('customer', 'room'));
+        
+        $role = auth()->user()?->role ?? 'guest';
+        
+        if (strtolower($role) === 'super' || strtolower($role) === 'admin') {
+            return view('room.show', compact('customer', 'room'));
+        }
+        
+        return view('customer.show', compact('room'));
     }
 
     /**
@@ -125,5 +131,25 @@ class RoomController extends Controller
                 'message' => 'Room ' . $room->number . ' cannot be deleted! Error Code: ' . $e->getCode(),
             ], 500);
         }
+    }
+
+    public function receptionistRooms()
+    {
+        $rooms = Room::with(['type', 'currentGuest'])
+            ->orderBy('number')
+            ->get();
+
+        // Get statistics for the dashboard
+        $stats = [
+            'availableRooms' => $rooms->where('status', 'Available')->count(),
+            'occupiedRooms' => $rooms->where('status', 'Occupied')->count(),
+            'maintenanceRooms' => $rooms->where('status', 'Maintenance')->count(),
+            'totalRooms' => $rooms->count()
+        ];
+
+        return view('receptionist.rooms', [
+            'rooms' => $rooms,
+            'stats' => $stats
+        ]);
     }
 }
