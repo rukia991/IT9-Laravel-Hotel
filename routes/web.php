@@ -91,7 +91,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], funct
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 });
 
-// Routes for Receptionist
+//Routes for Receptionist
 Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
     // Dashboard
     Route::get('/receptionist', function () {
