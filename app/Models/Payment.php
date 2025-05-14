@@ -12,8 +12,14 @@ class Payment extends Model
     protected $fillable = [
         'user_id',
         'transaction_id',
-        'price',
+        'amount',
         'status',
+        'payment_method',
+        'payment_details'
+    ];
+
+    protected $casts = [
+        'payment_details' => 'json'
     ];
 
     public function transaction()

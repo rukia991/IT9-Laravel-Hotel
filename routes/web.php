@@ -129,7 +129,7 @@ Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
         ->name('receptionist.payments');
     Route::get('/receptionist/process-payment/{transaction}', [PaymentController::class, 'processPayment'])
         ->name('receptionist.process-payment');
-    Route::post('/transaction/{transaction}/payment/store', [PaymentController::class, 'store'])
+    Route::post('/receptionist/payment/{transaction}/store', [PaymentController::class, 'store'])
         ->name('transaction.payment.store');
 });
 

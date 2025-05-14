@@ -1,6 +1,10 @@
 @extends('template.master')
 @section('title', 'Process Payment')
 
+@push('css')
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+@endpush
+
 @section('content')
 <div class="container-fluid px-4 py-4">
     <div class="row">
@@ -14,24 +18,40 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('transaction.payment.store', $transaction->id) }}" method="POST" id="paymentForm">
+                    <form action="{{ route('transaction.payment.store', ['transaction' => $transaction->id]) }}" method="POST" id="paymentForm">
                         @csrf
                         <div class="row g-4">
                             <!-- Reservation Details -->
                             <div class="col-12">
-                                <div class="alert alert-info">
-                                    <h6 class="alert-heading fw-bold mb-1">Reservation Details</h6>
-                                    <div class="row mt-3">
+                                <div class="bg-light rounded p-3">
+                                    <div class="row g-2">
                                         <div class="col-md-6">
-                                            <p class="mb-1"><strong>Guest:</strong> {{ $transaction->customer->name }}</p>
-                                            <p class="mb-1"><strong>Room:</strong> {{ $transaction->room->number }} ({{ $transaction->room->type->name }})</p>
-                                            <p class="mb-1"><strong>Check In:</strong> {{ Helper::dateFormat($transaction->check_in) }}</p>
-                                            <p class="mb-1"><strong>Check Out:</strong> {{ Helper::dateFormat($transaction->check_out) }}</p>
+                                            <p class="text-muted mb-1">Guest</p>
+                                            <p class="fw-medium mb-0">{{ $transaction->customer->name }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p class="mb-1"><strong>Total Amount:</strong> {{ Helper::convertToRupiah($transaction->getTotalPrice()) }}</p>
-                                            <p class="mb-1"><strong>Amount Paid:</strong> {{ Helper::convertToRupiah($transaction->getTotalPayment()) }}</p>
-                                            <p class="mb-1"><strong>Remaining Balance:</strong> {{ Helper::convertToRupiah($transaction->getTotalPrice() - $transaction->getTotalPayment()) }}</p>
+                                            <p class="text-muted mb-1">Room</p>
+                                            <p class="fw-medium mb-0">{{ $transaction->room->number }} ({{ $transaction->room->type->name }})</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="text-muted mb-1">Check In</p>
+                                            <p class="fw-medium mb-0">{{ $transaction->check_in->format('d M Y') }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="text-muted mb-1">Check Out</p>
+                                            <p class="fw-medium mb-0">{{ $transaction->check_out->format('d M Y') }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="text-muted mb-1">Total Amount</p>
+                                            <p class="fw-medium mb-0">₱ {{ number_format($transaction->getTotalPrice(), 2) }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="text-muted mb-1">Amount Paid</p>
+                                            <p class="fw-medium mb-0">₱ {{ number_format($transaction->getTotalPayment(), 2) }}</p>
+                                        </div>
+                                        <div class="col-12">
+                                            <p class="text-muted mb-1">Remaining Balance</p>
+                                            <p class="fw-medium mb-0">₱ {{ number_format($transaction->getTotalPrice() - $transaction->getTotalPayment(), 2) }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -65,18 +85,18 @@
                                            name="payment" 
                                            id="payment"
                                            value="{{ old('payment') }}"
+                                           placeholder="0.00"
                                            required>
-                                    <input type="hidden" name="payment_numeric" id="payment_numeric">
                                 </div>
                                 @error('payment')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Enter amount (commas and decimals allowed, e.g. 100,000.00)</div>
                             </div>
 
-                            <!-- Credit/Debit Card Fields (Initially Hidden) -->
+                            <!-- Credit/Debit Card Fields -->
                             <div id="cardFields" class="d-none">
                                 <div class="row g-3">
-                                    <!-- Card Number -->
                                     <div class="col-12">
                                         <label class="form-label">Card Number</label>
                                         <input type="text" 
@@ -85,17 +105,6 @@
                                                name="card_number"
                                                placeholder="**** **** **** ****">
                                     </div>
-
-                                    <!-- Card Holder -->
-                                    <div class="col-12">
-                                        <label class="form-label">Card Holder Name</label>
-                                        <input type="text" 
-                                               class="form-control" 
-                                               name="card_holder"
-                                               placeholder="Name on card">
-                                    </div>
-
-                                    <!-- Expiry Date and CVV -->
                                     <div class="col-md-6">
                                         <label class="form-label">Expiry Date</label>
                                         <input type="text" 
@@ -116,17 +125,17 @@
                                 </div>
                             </div>
 
-                            <!-- Bank Transfer Fields (Initially Hidden) -->
+                            <!-- Bank Transfer Fields -->
                             <div id="bankFields" class="d-none">
                                 <div class="row g-3">
                                     <div class="col-12">
-                                        <label class="form-label">Bank Name</label>
+                                        <label class="form-label">Bank</label>
                                         <select class="form-select" name="bank_name">
                                             <option value="">Select Bank</option>
-                                            <option value="bca">BCA</option>
-                                            <option value="mandiri">Mandiri</option>
-                                            <option value="bni">BNI</option>
-                                            <option value="bri">BRI</option>
+                                            <option value="bdo">BDO</option>
+                                            <option value="bpi">BPI</option>
+                                            <option value="metrobank">Metrobank</option>
+                                            <option value="unionbank">UnionBank</option>
                                         </select>
                                     </div>
                                     <div class="col-12">
@@ -134,20 +143,23 @@
                                         <input type="text" 
                                                class="form-control" 
                                                name="reference_number"
-                                               placeholder="Transfer reference number">
+                                               placeholder="Enter reference number">
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Notes -->
+                            <!-- Payment Notes -->
                             <div class="col-12">
                                 <label class="form-label">Payment Notes</label>
-                                <textarea class="form-control" name="notes" rows="3">{{ old('notes') }}</textarea>
+                                <textarea class="form-control" 
+                                          name="payment_notes" 
+                                          rows="3" 
+                                          placeholder="Enter any additional notes about the payment"></textarea>
                             </div>
 
                             <!-- Submit Button -->
                             <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
                                     <i class="fas fa-save me-2"></i>Process Payment
                                 </button>
                                 <a href="{{ route('receptionist.payments') }}" class="btn btn-outline-secondary">
@@ -173,9 +185,9 @@
                             <div class="timeline-item">
                                 <div class="timeline-marker bg-success"></div>
                                 <div class="timeline-content">
-                                    <div class="fw-bold">{{ Helper::convertToRupiah($payment->amount) }}</div>
+                                    <div class="fw-bold">₱ {{ number_format($payment->amount, 2) }}</div>
                                     <div class="text-muted small">{{ $payment->created_at->format('d M Y H:i') }}</div>
-                                    <div class="text-muted small">{{ ucfirst($payment->payment_method) }}</div>
+                                    <div class="text-muted small">{{ ucfirst($payment->payment_method ?? 'Not specified') }}</div>
                                 </div>
                             </div>
                             @endforeach
@@ -190,61 +202,139 @@
 </div>
 
 @push('scripts')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cleave.js/1.6.0/cleave.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing payment form...');
+    
+    const form = document.getElementById('paymentForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    const paymentInput = document.getElementById('payment');
+
     // Initialize Cleave.js for currency formatting
     var cleave = new Cleave('#payment', {
         numeral: true,
         numeralThousandsGroupStyle: 'thousand',
         numeralDecimalMark: '.',
-        delimiter: ','
-    });
-
-    // Initialize Cleave.js for card number formatting
-    var cardNumberCleave = new Cleave('#cardNumber', {
-        creditCard: true
-    });
-
-    // Initialize Cleave.js for expiry date formatting
-    var expiryDateCleave = new Cleave('#expiryDate', {
-        date: true,
-        datePattern: ['m', 'y']
-    });
-
-    // Initialize Cleave.js for CVV
-    var cvvCleave = new Cleave('#cvv', {
-        numeral: true,
+        delimiter: ',',
         numeralPositiveOnly: true,
-        stripLeadingZeroes: false
+        numeralDecimalScale: 2,
+        prefix: '',
+        rawValueTrimPrefix: true
     });
 
-    // Handle payment method change
-    document.getElementById('paymentMethod').addEventListener('change', function() {
+    // Form submission handler with confirmation
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Form submission started');
+
+        // Basic validation
+        if (!paymentMethodSelect.value) {
+            console.log('Payment method not selected');
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please select a payment method'
+            });
+            return;
+        }
+
+        if (!paymentInput.value) {
+            console.log('Payment amount not entered');
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please enter a payment amount'
+            });
+            return;
+        }
+
+        // Log form data before submission
+        const formData = new FormData(form);
+        console.log('Form data before submission:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+
+        // Show confirmation dialog
+        Swal.fire({
+            title: 'Confirm Payment',
+            text: 'Are you sure you want to process this payment?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, process payment',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Payment confirmed, processing...');
+                
+                // Clean the payment value before submission
+                var cleanValue = paymentInput.value.replace(/,/g, '');
+                if (!cleanValue.includes('.')) {
+                    cleanValue += '.00';
+                }
+                paymentInput.value = cleanValue;
+                console.log('Cleaned payment value:', cleanValue);
+                
+                // Show loading state
+                Swal.fire({
+                    title: 'Processing Payment',
+                    text: 'Please wait...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                        console.log('Submitting form to:', form.action);
+                        form.submit();
+                    }
+                });
+            } else {
+                console.log('Payment cancelled by user');
+            }
+        });
+    });
+
+    // Show/hide payment method specific fields
+    paymentMethodSelect.addEventListener('change', function() {
+        console.log('Payment method changed to:', this.value);
         const cardFields = document.getElementById('cardFields');
         const bankFields = document.getElementById('bankFields');
         
-        // Hide all payment specific fields first
         cardFields.classList.add('d-none');
         bankFields.classList.add('d-none');
         
-        // Show relevant fields based on selection
-        switch(this.value) {
-            case 'credit_card':
-            case 'debit_card':
-                cardFields.classList.remove('d-none');
-                break;
-            case 'bank_transfer':
-                bankFields.classList.remove('d-none');
-                break;
+        if (this.value === 'credit_card' || this.value === 'debit_card') {
+            cardFields.classList.remove('d-none');
+        } else if (this.value === 'bank_transfer') {
+            bankFields.classList.remove('d-none');
         }
     });
 
-    // Update hidden numeric field before form submission
-    document.getElementById('paymentForm').addEventListener('submit', function() {
-        var numericValue = cleave.getRawValue();
-        document.getElementById('payment_numeric').value = numericValue;
-    });
+    // Initialize card-related Cleave instances
+    if (document.getElementById('cardNumber')) {
+        new Cleave('#cardNumber', {
+            creditCard: true
+        });
+    }
+
+    if (document.getElementById('expiryDate')) {
+        new Cleave('#expiryDate', {
+            date: true,
+            datePattern: ['m', 'y']
+        });
+    }
+
+    if (document.getElementById('cvv')) {
+        new Cleave('#cvv', {
+            numeral: true,
+            numeralIntegerScale: 3,
+            numeralPositiveOnly: true,
+            stripLeadingZeroes: true
+        });
+    }
 });
 </script>
 
@@ -278,4 +368,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 @endpush
-@endsection 
+@endsection

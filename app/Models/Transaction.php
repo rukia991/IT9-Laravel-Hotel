@@ -68,7 +68,7 @@ class Transaction extends Model
     {
         $totalPayment = 0;
         foreach ($this->payment as $payment) {
-            $totalPayment += $payment->price;
+            $totalPayment += $payment->amount;
         }
 
         return $totalPayment;

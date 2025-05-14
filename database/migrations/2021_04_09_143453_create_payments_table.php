@@ -4,33 +4,33 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreatePaymentsTable extends Migration
+return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('reservation_id');
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('transaction_id');
             $table->decimal('amount', 10, 2);
-            $table->enum('payment_method', ['Cash', 'Card', 'Online']);
-            $table->enum('status', ['Pending', 'Paid']);
+            $table->string('payment_method')->nullable();
+            $table->json('payment_details')->nullable();
+            $table->string('status');
             $table->timestamps();
-            $table->foreign('reservation_id')->references('id')->on('reservations')->onDelete('cascade');
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
         });
     }
 
     /**
      * Reverse the migrations.
-     *
-     * @return void
      */
-    public function down()
+    public function down(): void
     {
         Schema::dropIfExists('payments');
     }
-}
+};
