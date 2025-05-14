@@ -10,25 +10,90 @@
                     <h5 class="mb-0">Room Status</h5>
                 </div>
                 <div class="col-auto">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
+                    <div class="btn-group" role="group" aria-label="Room filters">
+                        <button type="button" class="btn btn-outline-primary active" data-filter="all">All Rooms</button>
                         <button type="button" class="btn btn-outline-success" data-filter="available">Available</button>
                         <button type="button" class="btn btn-outline-danger" data-filter="occupied">Occupied</button>
-                        <button type="button" class="btn btn-outline-warning" data-filter="maintenance">Maintenance</button>
+                        <button type="button" class="btn btn-outline-warning" data-filter="reserved">Reserved</button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="card-body">
-            <div class="row g-4">
+            <!-- Stats Row -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted">Available Rooms</div>
+                                    <div class="fs-3 fw-bold text-success">{{ $stats['availableRooms'] }}</div>
+                                </div>
+                                <div class="bg-success bg-opacity-10 p-3 rounded">
+                                    <i class="fas fa-door-open fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted">Occupied Rooms</div>
+                                    <div class="fs-3 fw-bold text-danger">{{ $stats['occupiedRooms'] }}</div>
+                                </div>
+                                <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                    <i class="fas fa-door-closed fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted">Reserved Rooms</div>
+                                    <div class="fs-3 fw-bold text-warning">{{ $stats['pendingRooms'] }}</div>
+                                </div>
+                                <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                    <i class="fas fa-clock fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted">Total Rooms</div>
+                                    <div class="fs-3 fw-bold text-primary">{{ $stats['totalRooms'] }}</div>
+                                </div>
+                                <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                    <i class="fas fa-hotel fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rooms Grid -->
+            <div class="row g-4" id="roomsContainer">
                 @forelse($rooms ?? [] as $room)
-                <div class="col-xl-3 col-lg-4 col-md-6" data-status="{{ strtolower($room->status) }}">
-                    <div class="card h-100 {{ $room->status === 'Available' ? 'border-success' : ($room->status === 'Maintenance' ? 'border-warning' : 'border-danger') }}">
+                <div class="col-xl-3 col-lg-4 col-md-6 room-card" data-status="{{ $room->status }}">
+                    <div class="card h-100 {{ $room->status === 'available' ? 'border-success' : ($room->status === 'reserved' ? 'border-warning' : 'border-danger') }}">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h5 class="card-title mb-0">Room {{ $room->number }}</h5>
-                                <span class="badge {{ $room->status === 'Available' ? 'bg-success' : ($room->status === 'Maintenance' ? 'bg-warning' : 'bg-danger') }}">
-                                    {{ $room->status }}
+                                <span class="badge {{ $room->status === 'available' ? 'bg-success' : ($room->status === 'reserved' ? 'bg-warning' : 'bg-danger') }}">
+                                    {{ ucfirst($room->status) }}
                                 </span>
                             </div>
                             <div class="mb-3">
@@ -40,26 +105,31 @@
                                     <i class="fas fa-bed text-muted me-2"></i>
                                     <span>{{ $room->capacity }} Guests</span>
                                 </div>
-                                <div class="d-flex align-items-center mb-1">
-                                    <i class="fas fa-ruler-combined text-muted me-2"></i>
-                                    <span>{{ $room->size }} m²</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-wifi text-muted me-2"></i>
-                                    <span>Free WiFi</span>
-                                </div>
+                                @if($room->facilities->isNotEmpty())
+                                    @foreach($room->facilities as $facility)
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="{{ $facility->icon ?? 'fas fa-check' }} text-muted me-2"></i>
+                                        <span>{{ $facility->name }}</span>
+                                    </div>
+                                    @endforeach
+                                @endif
                             </div>
-                            @if($room->status !== 'Available')
+                            @if($room->status !== 'available')
                             <div class="alert alert-secondary mb-3">
                                 <div class="d-flex align-items-center">
                                     <i class="fas fa-clock text-muted me-2"></i>
-                                    <span>{{ $room->status === 'Maintenance' ? 'Under maintenance until:' : 'Occupied until:' }}</span>
+                                    <span>{{ $room->status === 'reserved' ? 'Reserved until:' : 'Occupied until:' }}</span>
                                 </div>
-                                <div class="fw-bold">{{ Helper::dateFormat($room->occupied_until) }}</div>
+                                <div class="fw-bold">{{ Helper::dateFormat($room->check_out_date) }}</div>
+                                @if($room->status === 'occupied' && $room->guest_info)
+                                <div class="mt-2">
+                                    <strong>Guest:</strong> {{ $room->guest_info->name }}
+                                </div>
+                                @endif
                             </div>
                             @endif
                             <div class="d-grid gap-2">
-                                @if($room->status === 'Available')
+                                @if($room->status === 'available')
                                 <a href="{{ route('receptionist.new-reservation', ['room' => $room->id]) }}" class="btn btn-success">
                                     <i class="fas fa-calendar-plus me-2"></i>New Reservation
                                 </a>
@@ -98,14 +168,10 @@
                                                 <td>{{ $room->capacity }} Guests</td>
                                             </tr>
                                             <tr>
-                                                <td>Size</td>
-                                                <td>{{ $room->size }} m²</td>
-                                            </tr>
-                                            <tr>
                                                 <td>Status</td>
                                                 <td>
-                                                    <span class="badge {{ $room->status === 'Available' ? 'bg-success' : ($room->status === 'Maintenance' ? 'bg-warning' : 'bg-danger') }}">
-                                                        {{ $room->status }}
+                                                    <span class="badge {{ $room->status === 'available' ? 'bg-success' : ($room->status === 'reserved' ? 'bg-warning' : 'bg-danger') }}">
+                                                        {{ ucfirst($room->status) }}
                                                     </span>
                                                 </td>
                                             </tr>
@@ -114,36 +180,30 @@
                                     <div class="col-md-6">
                                         <h6 class="fw-bold mb-3">Amenities</h6>
                                         <ul class="list-group">
-                                            <li class="list-group-item">
-                                                <i class="fas fa-wifi me-2"></i> Free WiFi
-                                            </li>
-                                            <li class="list-group-item">
-                                                <i class="fas fa-tv me-2"></i> Smart TV
-                                            </li>
-                                            <li class="list-group-item">
-                                                <i class="fas fa-snowflake me-2"></i> Air Conditioning
-                                            </li>
-                                            <li class="list-group-item">
-                                                <i class="fas fa-coffee me-2"></i> Coffee Maker
-                                            </li>
-                                            <li class="list-group-item">
-                                                <i class="fas fa-bath me-2"></i> Private Bathroom
-                                            </li>
+                                            @if($room->facilities->isNotEmpty())
+                                                @foreach($room->facilities as $facility)
+                                                <li class="list-group-item">
+                                                    <i class="{{ $facility->icon ?? 'fas fa-check' }} me-2"></i> {{ $facility->name }}
+                                                </li>
+                                                @endforeach
+                                            @else
+                                                <li class="list-group-item">No amenities listed</li>
+                                            @endif
                                         </ul>
                                     </div>
                                 </div>
-                                @if($room->status !== 'Available')
+                                @if($room->status !== 'available')
                                 <div class="mt-4">
-                                    <h6 class="fw-bold mb-3">Current Occupancy</h6>
+                                    <h6 class="fw-bold mb-3">{{ $room->status === 'reserved' ? 'Reservation Details' : 'Current Guest Information' }}</h6>
                                     <div class="alert alert-secondary">
                                         <p class="mb-2">
-                                            <strong>{{ $room->status === 'Maintenance' ? 'Under Maintenance' : 'Occupied' }} Until:</strong>
-                                            {{ Helper::dateFormat($room->occupied_until) }}
+                                            <strong>{{ $room->status === 'reserved' ? 'Reserved' : 'Occupied' }} Until:</strong>
+                                            {{ Helper::dateFormat($room->check_out_date) }}
                                         </p>
-                                        @if($room->status !== 'Maintenance')
+                                        @if($room->status === 'occupied' && $room->guest_info)
                                         <p class="mb-0">
-                                            <strong>Current Guest:</strong>
-                                            {{ $room->currentGuest->name ?? 'N/A' }}
+                                            <strong>Guest Name:</strong>
+                                            {{ $room->guest_info->name }}
                                         </p>
                                         @endif
                                     </div>
@@ -151,7 +211,7 @@
                                 @endif
                             </div>
                             <div class="modal-footer">
-                                @if($room->status === 'Available')
+                                @if($room->status === 'available')
                                 <a href="{{ route('receptionist.new-reservation', ['room' => $room->id]) }}" class="btn btn-success">
                                     <i class="fas fa-calendar-plus me-2"></i>New Reservation
                                 </a>
@@ -175,19 +235,35 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Filter functionality
-    $('.btn-group .btn').click(function() {
-        $('.btn-group .btn').removeClass('active');
-        $(this).addClass('active');
-        
-        var filter = $(this).data('filter');
-        if (filter === 'all') {
-            $('[data-status]').show();
-        } else {
-            $('[data-status]').hide();
-            $('[data-status="' + filter + '"]').show();
-        }
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all filter buttons
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    
+    // Add click event listener to each button
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the filter value
+            const filterValue = this.getAttribute('data-filter');
+            
+            // Get all room cards
+            const roomCards = document.querySelectorAll('.room-card');
+            
+            // Show/hide cards based on filter
+            roomCards.forEach(card => {
+                if (filterValue === 'all' || card.getAttribute('data-status') === filterValue) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
     });
 });
 </script>

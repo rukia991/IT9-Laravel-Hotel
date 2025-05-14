@@ -19,7 +19,8 @@ class Transaction extends Model
         'check_out',
         'status',
         'number_of_guests',
-        'special_requests'
+        'special_requests',
+        'total_price'
     ];
 
     protected $casts = [

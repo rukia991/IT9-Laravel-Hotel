@@ -83,9 +83,10 @@ $(function() {
         <a class="nav-link {{ request()->routeIs('customer.index') ? 'active' : '' }}" href="{{ route('customer.index') }}">
             <i class="fas fa-home me-2"></i>Home
         </a>
-        <a class="nav-link {{ request()->routeIs('customer.reservations') ? 'active' : '' }}" href="{{ route('customer.reservations') }}">
-            <i class="fas fa-calendar-alt me-2"></i>My Reservations
-        </a>
+<a class="nav-link {{ request()->routeIs('customer.reservations') ? 'active' : '' }}" href="{{ route('customer.reservations') }}">
+    <i class="fas fa-calendar-alt me-2"></i>My Reservations
+</a>
+
         <a class="nav-link" href="#">
             <i class="fas fa-tag me-2"></i>Special Offers
         </a>

@@ -28,11 +28,17 @@ class TransactionController extends Controller
     public function receptionistReservations()
     {
         // Get all reservations with relationships
-        $reservations = Transaction::with(['customer.user', 'room.type', 'payment'])
+        $reservations = Transaction::with(['customer.user', 'room.type'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         // Get counts for dashboard
+        $pendingReservationsList = Transaction::with(['customer', 'room'])
+            ->where('status', 'Pending')
+            ->orderBy('check_in')
+            ->take(5)
+            ->get();
+
         $pendingReservations = Transaction::where('status', 'Pending')->count();
         $todayCheckins = Transaction::whereDate('check_in', Carbon::today())
             ->where('status', 'Approved')
@@ -41,6 +47,7 @@ class TransactionController extends Controller
         return view('receptionist.reservations', [
             'reservations' => $reservations,
             'pendingReservations' => $pendingReservations,
+            'pendingReservationsList' => $pendingReservationsList,
             'todayCheckins' => $todayCheckins
         ]);
     }
@@ -70,9 +77,10 @@ class TransactionController extends Controller
         // Update room status
         $transaction->room->update(['status' => 'Reserved']);
         
+        // Redirect to payment processing
         return redirect()
-            ->route('receptionist.reservations')
-            ->with('success', 'Reservation has been approved successfully');
+            ->route('receptionist.process-payment', $transaction->id)
+            ->with('success', 'Reservation approved. Please process the payment.');
     }
 
     public function rejectReservation(Transaction $transaction)
@@ -98,21 +106,47 @@ class TransactionController extends Controller
 
     public function checkInList()
     {
-        $todayCheckins = Transaction::with(['customer.user', 'room'])
+        $todayCheckins = Transaction::with(['customer.user', 'room.type'])
             ->whereDate('check_in', today())
             ->where('status', 'Approved')
             ->get();
 
-        $upcomingCheckins = Transaction::with(['customer.user', 'room'])
+        $upcomingCheckins = Transaction::with(['customer.user', 'room.type'])
             ->whereDate('check_in', '>', today())
             ->where('status', 'Approved')
             ->orderBy('check_in')
             ->take(5)
             ->get();
 
-        return view('receptionist.check-in', [
-            'todayCheckins' => $todayCheckins,
-            'upcomingCheckins' => $upcomingCheckins
-        ]);
+        return view('receptionist.check-in', compact('todayCheckins', 'upcomingCheckins'));
+    }
+
+    public function processCheckIn(Transaction $transaction)
+    {
+        try {
+            // Verify the transaction is approved and due for check-in
+            if ($transaction->status !== 'Approved') {
+                return back()->with('error', 'Only approved reservations can be checked in.');
+            }
+
+            if ($transaction->check_in > today()) {
+                return back()->with('error', 'This reservation is not due for check-in yet.');
+            }
+
+            // Update transaction status
+            $transaction->update([
+                'status' => 'Checked-in',
+                'checked_in_at' => now()
+            ]);
+
+            // Update room status
+            $transaction->room->update(['status' => 'Occupied']);
+
+            return redirect()
+                ->route('receptionist.check-in')
+                ->with('success', 'Guest has been successfully checked in.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'An error occurred while processing check-in. Please try again.');
+        }
     }
 }

@@ -71,21 +71,20 @@ class RoomController extends Controller
      */
     public function show(Room $room)
     {
-        $transaction = Transaction::where([
-            ['check_in', '<=', Carbon::now()],
-            ['check_out', '>=', Carbon::now()],
-            ['room_id', $room->id]
-        ])->first();
+        // Load necessary relationships
+        $room->load(['type', 'facilities', 'images']);
 
-        $customer = $transaction?->customer ?? [];
+        // Get room availability for the next 30 days
+        $today = now();
+        $thirtyDaysFromNow = now()->addDays(30);
         
-        $role = auth()->user()?->role ?? 'guest';
-        
-        if (strtolower($role) === 'super' || strtolower($role) === 'admin') {
-            return view('room.show', compact('customer', 'room'));
-        }
-        
-        return view('customer.show', compact('room'));
+        $existingBookings = Transaction::where('room_id', $room->id)
+            ->whereIn('status', ['Approved', 'Pending'])
+            ->where('check_out', '>=', $today)
+            ->where('check_in', '<=', $thirtyDaysFromNow)
+            ->get(['check_in', 'check_out', 'status']);
+
+        return view('customer.room_details', compact('room', 'existingBookings'));
     }
 
     /**
@@ -135,17 +134,46 @@ class RoomController extends Controller
 
     public function receptionistRooms()
     {
-        $rooms = Room::with(['type', 'currentGuest'])
+        // Get all rooms with their relationships
+        $rooms = Room::with(['type', 'currentTransaction.customer', 'facilities'])
             ->orderBy('number')
             ->get();
 
-        // Get statistics for the dashboard
+        // Get current transactions to determine room status
+        $currentTransactions = Transaction::where('status', 'Approved')
+            ->where('check_in', '<=', now())
+            ->where('check_out', '>', now())
+            ->pluck('room_id');
+
+        // Get pending transactions
+        $pendingTransactions = Transaction::where('status', 'Pending')
+            ->where('check_in', '>', now())
+            ->pluck('room_id');
+
+        // Calculate statistics
         $stats = [
-            'availableRooms' => $rooms->where('status', 'Available')->count(),
-            'occupiedRooms' => $rooms->where('status', 'Occupied')->count(),
-            'maintenanceRooms' => $rooms->where('status', 'Maintenance')->count(),
-            'totalRooms' => $rooms->count()
+            'totalRooms' => $rooms->count(),
+            'availableRooms' => $rooms->whereNotIn('id', $currentTransactions)->whereNotIn('id', $pendingTransactions)->count(),
+            'occupiedRooms' => $rooms->whereIn('id', $currentTransactions)->count(),
+            'pendingRooms' => $rooms->whereIn('id', $pendingTransactions)->count(),
         ];
+
+        // Add room status and additional info for each room
+        foreach ($rooms as $room) {
+            if ($room->currentTransaction) {
+                $room->status = 'occupied';
+                $room->guest_info = $room->currentTransaction->customer;
+                $room->check_out_date = $room->currentTransaction->check_out;
+            } elseif ($pendingTransactions->contains($room->id)) {
+                $room->status = 'reserved';
+                $room->guest_info = null;
+                $room->check_out_date = null;
+            } else {
+                $room->status = 'available';
+                $room->guest_info = null;
+                $room->check_out_date = null;
+            }
+        }
 
         return view('receptionist.rooms', [
             'rooms' => $rooms,

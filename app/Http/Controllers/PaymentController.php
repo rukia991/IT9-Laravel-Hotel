@@ -56,12 +56,27 @@ class PaymentController extends Controller
 
     public function receptionistPayments()
     {
-        $payments = Payment::with(['transaction.customer', 'transaction.room'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Get approved transactions that need payment
+        $transactions = Transaction::with(['customer', 'room.type'])
+            ->where('status', 'Approved')
+            ->get();
+
+        // Calculate statistics
+        $stats = [
+            'totalPaid' => Payment::sum('amount'),
+            'totalPending' => $transactions->sum(function ($transaction) {
+                return $transaction->getTotalPrice() - $transaction->getTotalPayment();
+            }),
+            'partialCount' => $transactions->filter(function ($transaction) {
+                $paid = $transaction->getTotalPayment();
+                return $paid > 0 && $paid < $transaction->getTotalPrice();
+            })->count(),
+            'totalTransactions' => $transactions->count()
+        ];
 
         return view('receptionist.payments', [
-            'payments' => $payments
+            'transactions' => $transactions,
+            'stats' => $stats
         ]);
     }
 

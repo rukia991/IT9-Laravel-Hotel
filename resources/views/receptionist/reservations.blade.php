@@ -10,7 +10,7 @@
                     <h5 class="mb-0">Manage Reservations</h5>
                 </div>
                 <div class="col-auto">
-                    <div class="btn-group">
+                    <div class="btn-group" role="group" aria-label="Reservation filters">
                         <button type="button" class="btn btn-outline-primary active" data-filter="all">All</button>
                         <button type="button" class="btn btn-outline-warning" data-filter="pending">Pending</button>
                         <button type="button" class="btn btn-outline-success" data-filter="approved">Approved</button>
@@ -21,7 +21,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="reservationsTable">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light">
                         <tr>
                             <th>Booking ID</th>
@@ -37,7 +37,7 @@
                     </thead>
                     <tbody>
                         @forelse($reservations ?? [] as $reservation)
-                        <tr data-status="{{ strtolower($reservation->status) }}">
+                        <tr class="reservation-row" data-status="{{ strtolower($reservation->status) }}">
                             <td>#{{ $reservation->id }}</td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -95,6 +95,20 @@
                                             </a>
                                         </li>
                                         @endif
+                                        @if($reservation->status == 'Approved' && $reservation->check_in <= now()->toDateString())
+                                        <li>
+                                            <a href="{{ route('receptionist.check-in', $reservation->id) }}" class="dropdown-item">
+                                                <i class="fas fa-sign-in-alt me-2"></i> Check-in
+                                            </a>
+                                        </li>
+                                        @endif
+                                        @if($reservation->status == 'Checked-in')
+                                        <li>
+                                            <a href="{{ route('receptionist.check-out', $reservation->id) }}" class="dropdown-item">
+                                                <i class="fas fa-sign-out-alt me-2"></i> Check-out
+                                            </a>
+                                        </li>
+                                        @endif
                                         <li>
                                             <a class="dropdown-item" href="{{ route('receptionist.reservation-details', $reservation->id) }}">
                                                 <i class="fas fa-eye me-2"></i> View Details
@@ -123,25 +137,33 @@
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    // Initialize DataTable
-    $('#reservationsTable').DataTable({
-        "order": [[0, "desc"]],
-        "pageLength": 25
-    });
-
-    // Filter functionality
-    $('.btn-group .btn').click(function() {
-        $('.btn-group .btn').removeClass('active');
-        $(this).addClass('active');
-        
-        var filter = $(this).data('filter');
-        if (filter === 'all') {
-            $('tbody tr').show();
-        } else {
-            $('tbody tr').hide();
-            $('tbody tr[data-status="' + filter + '"]').show();
-        }
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all filter buttons and reservation rows
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    const reservationRows = document.querySelectorAll('.reservation-row');
+    
+    // Add click event listener to each button
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the filter value
+            const filterValue = this.getAttribute('data-filter');
+            
+            // Show/hide rows based on filter
+            reservationRows.forEach(row => {
+                if (filterValue === 'all' || row.getAttribute('data-status') === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
     });
 });
 

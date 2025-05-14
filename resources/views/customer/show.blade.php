@@ -1,4 +1,4 @@
-wextends('template.master')
+@extends('template.master')
 @section('title', 'Room Details')
 @section('content')
 
@@ -170,6 +170,7 @@ wextends('template.master')
 
                                 @csrf
                                 <input type="hidden" name="room_id" value="{{ $room->id }}">
+                                <input type="hidden" name="total_price" id="total_price_input" value="0">
 
                                 <div class="mb-3">
                                     <label for="check_in" class="form-label">Check-in Date</label>
@@ -342,6 +343,9 @@ wextends('template.master')
                             document.getElementById('subtotal').textContent = '₱' + subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             document.getElementById('taxes').textContent = '₱' + taxes.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                             document.getElementById('total').textContent = '₱' + total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            
+                            // Set the total price in the hidden input
+                            document.getElementById('total_price_input').value = total.toFixed(2);
                         } else {
                             resetPriceSummary();
                         }
@@ -355,6 +359,7 @@ wextends('template.master')
                     document.getElementById('subtotal').textContent = '₱0.00';
                     document.getElementById('taxes').textContent = '₱0.00';
                     document.getElementById('total').textContent = '₱0.00';
+                    document.getElementById('total_price_input').value = '0.00';
                 }
 
                 // Form validation

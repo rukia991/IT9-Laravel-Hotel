@@ -71,32 +71,36 @@ Route::group(['middleware' => ['auth', 'checkRole:Super,Admin']], function () {
     Route::get('/get-dialy-guest/{year}/{month}/{day}', [ChartController::class, 'dailyGuest'])->name('chart.dailyGuest');
 });
 
-// Routes for Super Admin, Admin, and Customer
-Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer']], function () {
+// Routes for Super Admin, Admin, Customer, and Receptionist
+Route::group(['middleware' => ['auth', 'checkRole:Super,Admin,Customer,Receptionist']], function () {
     Route::get('/activity-log', [ActivityController::class, 'index'])->name('activity-log.index');
     Route::get('/activity-log/all', [ActivityController::class, 'all'])->name('activity-log.all');
     Route::resource('user', UserController::class)->only(['show']);
-    Route::get('/customer/reservations', [CustomerController::class, 'reservedRooms'])->name('customer.reservations');
 
     Route::view('/notification', 'notification.index')->name('notification.index');
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
     Route::get('/mark-all-as-read', [NotificationsController::class, 'markAllAsRead'])->name('notification.markAllAsRead');
-
     Route::get('/notification-to/{id}', [NotificationsController::class, 'routeTo'])->name('notification.routeTo');
+});
 
+// For Customers and Guest Access
+Route::get('/customer', [RoomController::class, 'index'])->name('customer.index');
+Route::get('/customer/room/{room}', [RoomController::class, 'show'])->name('customer.room.show');
+
+// Customer Dashboard Routes (Authenticated)
+Route::group(['middleware' => ['auth', 'checkRole:Customer']], function () {
+    Route::get('/customer/dashboard', [CustomerController::class, 'dashboard'])->name('customer.dashboard');
+    Route::get('/customer/profile', [CustomerController::class, 'profile'])->name('customer.profile');
+    Route::get('/customer/reservations', [CustomerController::class, 'reservedRooms'])->name('customer.reservations');
     Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 });
 
-//Routes for Receptionist
+// Routes for Receptionist
 Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
     // Dashboard
-    Route::get('/receptionist', function () {
-        return view('receptionist.index');
-    })->name('receptionist.index');
+    Route::get('/receptionist', [CustomerController::class, 'receptionistDashboard'])
+        ->name('receptionist.index');
 
     // Reservations
     Route::get('/receptionist/reservations', [TransactionController::class, 'receptionistReservations'])
@@ -107,6 +111,12 @@ Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
         ->name('receptionist.reservations.reject');
     Route::get('/receptionist/reservations/{transaction}', [TransactionController::class, 'reservationDetails'])
         ->name('receptionist.reservation-details');
+
+    // Check-in/out
+    Route::get('/receptionist/check-in', [TransactionController::class, 'checkInList'])
+        ->name('receptionist.check-in');
+    Route::post('/receptionist/check-in/{transaction}/process', [TransactionController::class, 'processCheckIn'])
+        ->name('receptionist.process-check-in');
 
     // Rooms
     Route::get('/receptionist/rooms', [RoomController::class, 'receptionistRooms'])
@@ -119,10 +129,8 @@ Route::group(['middleware' => ['auth', 'checkRole:Receptionist']], function () {
         ->name('receptionist.payments');
     Route::get('/receptionist/process-payment/{transaction}', [PaymentController::class, 'processPayment'])
         ->name('receptionist.process-payment');
-
-    // Check-in/out
-    Route::get('/receptionist/check-in', [TransactionController::class, 'checkInList'])
-        ->name('receptionist.check-in');
+    Route::post('/transaction/{transaction}/payment/store', [PaymentController::class, 'store'])
+        ->name('transaction.payment.store');
 });
 
 // Routes for Manager
@@ -135,10 +143,6 @@ Route::group(['middleware' => ['auth', 'checkRole:Manager']], function () {
 // Login routes
 Route::view('/login', 'auth.login')->name('login.index');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
-
-// For Customers and Guest Access
-Route::get('/customer', [RoomController::class, 'index'])->name('customer.index');
-Route::get('/customer/room/{room}', [RoomController::class, 'show'])->name('customer.room.show');
 
 // Forgot Password routes
 Route::group(['middleware' => 'guest'], function () {
